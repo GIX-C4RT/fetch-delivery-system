@@ -1,0 +1,2 @@
+visualization_msgs/Marker box_scale
+geometry_msgs/Pose box_pose

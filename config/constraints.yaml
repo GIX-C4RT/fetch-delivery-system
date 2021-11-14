@@ -1,0 +1,9 @@
+path_constraint:
+  name: "myconstraints"
+  constraints:
+  - type: "orientation"
+    frame_id: "base_link"
+    link_name: "wrist_roll_link"
+    orientation: [0, 1.57, 0]
+    tolerances: [6.28, 0.2, 0.2]
+    weight: 1
