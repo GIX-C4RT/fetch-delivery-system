@@ -21,7 +21,7 @@
 #include <pcl/pcl_config.h>
 
 #include <math.h>
-#include <robotics_labs/BoxTarget.h>
+#include <fetch_delivery_system/BoxTarget.h>
 #include "sensor_msgs/JointState.h"
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/Vector3.h"
@@ -218,7 +218,7 @@ void callback(const PointCloud::ConstPtr& cloud)
     object_marker.scale.z = shape.dimensions[2];
     box_marker.publish(object_marker);
     box_pose_pub.publish(box_pose);
-    robotics_labs::BoxTarget box_target_msg;
+    fetch_delivery_system::BoxTarget box_target_msg;
     box_target_msg.box_scale = object_marker;
     box_target_msg.box_pose = box_pose;
     box_target.publish(box_target_msg);
@@ -233,7 +233,7 @@ int main(int argc, char** argv)
   pub_plane = nh.advertise<PointCloud> ("points2_plane", 1);
   box_marker = nh.advertise<visualization_msgs::Marker> ("box_marker", 1);
   box_pose_pub = nh.advertise<geometry_msgs::Pose> ("box_target_pose", 1);
-  box_target = nh.advertise<robotics_labs::BoxTarget> ("box_target", 1);
+  box_target = nh.advertise<fetch_delivery_system::BoxTarget> ("box_target", 1);
   ros::Subscriber sub = nh.subscribe<PointCloud>("/head_camera/depth_downsample/points", 1, callback);
   ros::Subscriber joint_sub = nh.subscribe<sensor_msgs::JointState>("joint_states", 1, update_head_angle);
   ros::spin();

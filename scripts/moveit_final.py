@@ -9,7 +9,7 @@ from math import sqrt
 from std_msgs.msg import String
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Pose
-from robotics_labs.msg import BoxTarget
+from fetch_delivery_system.msg import BoxTarget
 from moveit_commander.conversions import pose_to_list
 import tf
 from tf.transformations import *

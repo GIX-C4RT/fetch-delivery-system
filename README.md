@@ -19,5 +19,5 @@ catkin_make # build the packages
 ## Running Pick-and-Place Code
 ### Pick
 Terminal 1: `roslaunch fetch_moveit_config move_group.launch`
-Terminal 2: `rosrun robotics_labs segment_object`
+Terminal 2: `rosrun fetch_delivery_system segment_object`
 Terminal 3: `python moveit_final.py`

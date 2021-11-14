@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.7.2)
-project(robotics_labs)
+project(fetch_delivery_system)
 
 find_package(catkin REQUIRED 
   COMPONENTS 
