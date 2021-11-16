@@ -1,7 +1,7 @@
 # fetch-delivery-system
 A delivery and retrival system utilizing a Fetch Mobile Manipulator robot
 
-# Installation
+## Installation
 1. [Install Ubuntu 18.04](https://releases.ubuntu.com/18.04/)
 . [Install ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu)
 2. [Set up a catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace)
@@ -16,8 +16,20 @@ cd .. # change to catkin workspace directory
 catkin_make # build the packages
 ```
 
-## Running Pick-and-Place Code
-### Pick
-Terminal 1: `roslaunch fetch_moveit_config move_group.launch`
-Terminal 2: `rosrun fetch_delivery_system segment_object`
-Terminal 3: `python moveit_final.py`
+## Running
+### Pick-and-Place
+#### Pick
+1. Navigate to the catkin workspace directory.
+2. Run the following commands in a Bash terminal in the catkin workspace:
+```
+source devel/setup.bash # overlay workspace on terminal environment
+roslaunch fetch_delivery_system pick.launch # launch the pick code
+```
+
+## Known Issues
+### RViz and VMWare
+RViz (and Gazebo, and some other software) does not seem to work well with the graphics drivers when running Ubuntu in a VMware.
+See this (Gazebo Answers post)[https://answers.gazebosim.org//question/13214/virtual-machine-not-launching-gazebo/]
+for more info and instructions for how to fix.
+
+TL;DR: enter `echo "export SVGA_VGPU10=0" >> ~/.profile` in a Bash terminal
