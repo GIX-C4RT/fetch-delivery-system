@@ -74,7 +74,7 @@ add_dependencies(segment_object ${catkin_EXPORTED_TARGETS})
 
 install(
   PROGRAMS
-    scripts/demo.py
+    scripts/pick.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
