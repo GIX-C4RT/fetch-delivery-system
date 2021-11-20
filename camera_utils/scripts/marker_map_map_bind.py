@@ -1,0 +1,1 @@
+#publish static transform from marker map to actual map
