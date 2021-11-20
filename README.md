@@ -8,7 +8,7 @@ A delivery and retrival system utilizing a Fetch Mobile Manipulator robot
 3. Run the following commands in a Bash terminal in the catkin workspace you just created:
 ```
 sudo apt install python3 python3-pip # install Python3 and Pip3
-pip install ipython # install IPython
+pip install ipython numpy # install IPython and NumPy
 cd src # change to the src directory
 git clone https://github.com/jamesdarrenmuir/fetch_api.git # clone the Fetch API
 git clone https://github.com/GIX-C4RT/fetch-delivery-system.git # clone this repository
@@ -29,7 +29,12 @@ roslaunch fetch_delivery_system pick.launch # launch the pick code
 ## Known Issues
 ### RViz and VMWare
 RViz (and Gazebo, and some other software) does not seem to work well with the graphics drivers when running Ubuntu in a VMware.
-See this (Gazebo Answers post)[https://answers.gazebosim.org//question/13214/virtual-machine-not-launching-gazebo/]
+See this [Gazebo Answers post](https://answers.gazebosim.org//question/13214/virtual-machine-not-launching-gazebo/)
 for more info and instructions for how to fix.
 
 TL;DR: enter `echo "export SVGA_VGPU10=0" >> ~/.profile` in a Bash terminal
+
+If you don't want to permanently change your environment variables, 
+[try launching RViz with the following option](https://github.com/ros-visualization/rviz/issues/1544#issuecomment-690338537):
+`rosrun rviz rviz --opengl 210`
+

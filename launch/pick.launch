@@ -3,12 +3,15 @@
     <!-- Arguments -->
     <arg name="rviz" default="true" />
 
+    <!-- Start RViz -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find fetch_delivery_system)/config/segmentation.rviz" if="$(arg rviz)"/>
+
     <!-- Start MoveIt -->
     <include file="$(find fetch_delivery_system)/launch/include/moveit.launch" />
 
-    <!-- Start RViz -->
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find fetch_delivery_system)/config/grasping.rviz" if="$(arg rviz)"/>
-
     <!-- Start the object segmentation node -->
-    <!-- <node type="" name="" pkg=""> -->
+    <node type="segment_object" name="segment_object" pkg="fetch_delivery_system" />
+
+    <!-- Pick up the box -->
+    <node name="pick" type="pick" pkg="fetch_delivery_system" output="screen" />
 </launch>
