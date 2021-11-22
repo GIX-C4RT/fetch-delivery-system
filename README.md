@@ -5,7 +5,8 @@ A delivery and retrival system utilizing a Fetch Mobile Manipulator robot
 1. [Install Ubuntu 18.04](https://releases.ubuntu.com/18.04/)
 . [Install ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu)
 2. [Set up a catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace)
-3. Run the following commands in a Bash terminal in the catkin workspace you just created:
+3. [Download ArUco](https://www.uco.es/investiga/grupos/ava/node/26)
+4. Run the following commands in a Bash terminal in the catkin workspace you just created:
 ```
 sudo apt install python3 python3-pip # install Python3 and Pip3
 pip install ipython numpy # install IPython and NumPy

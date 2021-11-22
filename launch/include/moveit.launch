@@ -1,6 +1,6 @@
 <launch>
   <!-- Set MoveIt timeout -->
-  <param name="trajectory_execution/controller_connection_timeout" type="double" value="20.0" />
+  <!-- <param name="trajectory_execution/controller_connection_timeout" type="double" value="20.0" /> -->
   <!-- Start MoveIt -->
   <include file="$(find fetch_moveit_config)/launch/move_group.launch" >
     <arg name="info" value="true"/> <!-- publish grasp markers -->
