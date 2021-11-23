@@ -1,27 +1,31 @@
 import sys
 import copy
+from math import pi
+from math import sqrt
+import time
+
+import numpy as np
 import rospy
 import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
-from math import pi
-from math import sqrt
 from std_msgs.msg import String
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Pose, PoseStamped, Point, Quaternion
-from robotics_labs.msg import BoxTarget
 from moveit_commander.conversions import pose_to_list
 import tf
 from tf.transformations import *
 import tf2_ros
 import tf2_geometry_msgs
-import numpy as np
-import time
+from std_srvs.srv import Empty
+
 from fetch_api import Gripper
 from fetch_api import Torso
 from fetch_api import Head
 from fetch_api import Base
-from std_srvs.srv import Empty
+
+from robotics_labs.msg import BoxTarget
+
 TablePoses = (Pose(position=Point(x = 6.24092817307,y = 5.13014507294, z = 0), orientation=Quaternion(x = 0, y = 0, z = 0.68882361899, w = 0.724928977156)), 
  Pose(position=Point(x = 5.93524551392, y = 1.50320911407, z = 0), orientation=Quaternion(x = 0, y = 0, z = 0.684483803425, w = 0.729028067257)))
 class FetchController:
