@@ -26,14 +26,21 @@ from fetch_api import Base
 
 from robotics_labs.msg import BoxTarget
 
-TablePoses = (Pose(position=Point(x = 6.24092817307,y = 5.13014507294, z = 0), orientation=Quaternion(x = 0, y = 0, z = 0.68882361899, w = 0.724928977156)), 
- Pose(position=Point(x = 5.93524551392, y = 1.50320911407, z = 0), orientation=Quaternion(x = 0, y = 0, z = 0.684483803425, w = 0.729028067257)))
 class FetchController:
+    '''
+    A class representing the Fetch robot.
+    '''
     def __init__(self):
+        '''
+        Instantiate an instance of the FetchController class.
+        '''
+        # start ROS node
         rospy.init_node('fetch_controller', anonymous=True)
+        # set up publisher for goal position
         self.nav_goal_pub = rospy.Publisher('move_base_simple/goal', PoseStamped, latch=True, queue_size=1)
+        self.initialize_grasping()
         
-    def init_grasping(self):
+    def initialize_grasping(self):
         moveit_commander.roscpp_initialize(sys.argv)
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
@@ -43,7 +50,7 @@ class FetchController:
         self.torso = Torso()
         self.head = Head()
         self.base = Base()
-        # Clearning any pre-existing octomap
+        # Clearing any pre-existing octomap
         rospy.wait_for_service('/clear_octomap') #this will stop your code until the clear octomap service starts running
         self.clear_octomap = rospy.ServiceProxy('/clear_octomap', Empty)
 
@@ -58,9 +65,8 @@ class FetchController:
 
     def grasp_item(self):
         # Execute moveit final script
-        self.init_grasping()
         box_pose = self.get_box_pose()
-        # if(box_pose.pose.position.x > 0.5):
+        # if(box_pose.pose.positiQuaternion(x=0, )on.x > 0.5):
         #     box_pose.pose.position.x
         #     self.base.go_forward(box_pose.pose.position.x - 0.5)
         #     box_pose = self.get_box_pose()
@@ -68,7 +74,6 @@ class FetchController:
         self.execute_pose_goal(box_pose)
         self.execute_approach()
         self.execute_retract()
-        self.base.go_forward(-0.5)
         self.execute_tuck()
         self.torso.set_height(0.09)
 
@@ -76,13 +81,14 @@ class FetchController:
         # Docking to table
         pass
 
-    def navigate_to(self, target_pose):
+    def navigate_to(self, x, y, theta):
         # Send a navigating goal
         NavGoal = PoseStamped()
         NavGoal.header.frame_id = "map"
         NavGoal.header.stamp = rospy.Time.now()
-        # NavGoal.pose = target_pose
-        NavGoal.pose = TablePoses[0]
+        position = Point(x=x, y=y, z=0)
+        orientation = quaternion_from_euler(0, 0, theta)
+        NavGoal.pose = Pose(position, orientation)
         self.nav_goal_pub.publish(NavGoal)
 
     def get_box_pose(self):
