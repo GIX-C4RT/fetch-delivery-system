@@ -164,7 +164,7 @@ waypoints = []
 pose.position.z -= 0.1
 waypoints.append(copy.deepcopy(pose))
 
-pose.position.z -= 0.08
+pose.position.z -= 0.18
 waypoints.append(copy.deepcopy(pose))
 
 (plan, fraction) = move_group.compute_cartesian_path(

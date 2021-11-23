@@ -4,7 +4,7 @@
     <arg name="rviz" default="true" />
 
     <!-- Start RViz -->
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find fetch_delivery_system)/config/segmentation.rviz" if="$(arg rviz)"/>
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find fetch_delivery_system)/config/rviz/segmentation.rviz" if="$(arg rviz)"/>
 
     <!-- Start MoveIt -->
     <include file="$(find fetch_delivery_system)/launch/include/moveit.launch" />
