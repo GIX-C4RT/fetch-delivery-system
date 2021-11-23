@@ -1,5 +1,4 @@
 <launch>
-
     <!-- Arguments -->
     <arg name="rviz" default="true" />
 
@@ -11,7 +10,4 @@
 
     <!-- Start the object segmentation node -->
     <node type="segment_object" name="segment_object" pkg="fetch_delivery_system" />
-
-    <!-- Pick up the box -->
-    <node name="pick" type="pick" pkg="fetch_delivery_system" output="screen" />
 </launch>

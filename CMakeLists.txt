@@ -60,7 +60,7 @@ add_dependencies(segment_object ${catkin_EXPORTED_TARGETS})
 
 install(
   PROGRAMS
-    nodes/pick
+    scripts/fetch_controller.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
