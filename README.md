@@ -3,9 +3,8 @@ A delivery and retrival system utilizing a Fetch Mobile Manipulator robot
 
 ## Installation
 1. [Install Ubuntu 18.04](https://releases.ubuntu.com/18.04/)
-. [Install ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu)
-2. [Set up a catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace)
-3. [Download ArUco](https://www.uco.es/investiga/grupos/ava/node/26)
+2. [Install ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu)
+3. [Set up a catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace)
 4. Run the following commands in a Bash terminal in the catkin workspace you just created:
 ```
 sudo apt install python3 python3-pip # install Python3 and Pip3
@@ -16,6 +15,7 @@ git clone https://github.com/GIX-C4RT/fetch-delivery-system.git # clone this rep
 cd .. # change to catkin workspace directory
 catkin_make # build the packages
 ```
+5. Perform the fetch_moveit_config bug workaround from the Known Issues section
 
 ## Running
 ### Pick-and-Place
@@ -28,6 +28,13 @@ roslaunch fetch_delivery_system pick.launch # launch the pick code
 ```
 
 ## Known Issues
+### fetch_moveit_config Bug Workaround
+The fetch_moveit_config package has a bug in one of the files. In order to fix it, please open a Bash terminal,
+navigate to your catkin root directory, then running the following commands:
+```
+sudo cp ./src/fetch-delivery-system/workarounds/fetch_moveit_config/ompl_planning.yaml /opt/ros/melodic/share/fetch_moveit_config/config
+```
+
 ### RViz and VMWare
 RViz (and Gazebo, and some other software) does not seem to work well with the graphics drivers when running Ubuntu in a VMware.
 See this [Gazebo Answers post](https://answers.gazebosim.org//question/13214/virtual-machine-not-launching-gazebo/)
