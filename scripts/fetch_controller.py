@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import sys
 import copy
 from math import pi
@@ -311,5 +313,5 @@ class FetchController:
 if __name__ == "__main__":
     myf = FetchController()
     myf.grasp_item()
-    myf.navigate_to(None)
+    # myf.navigate_to(None)
     rospy.spin()
