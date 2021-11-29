@@ -1,6 +1,13 @@
-#include <ros/ros.h>
-#include <pcl_ros/point_cloud.h>
+#include <math.h>
+
 #include <boost/foreach.hpp>
+
+#include <ros/ros.h>
+
+// #include <tf/transform_datatypes.h>
+#include <eigen_conversions/eigen_msg.h>
+
+#include <pcl_ros/point_cloud.h>
 
 #include <pcl/common/common.h>
 #include <pcl/point_cloud.h>
@@ -20,14 +27,15 @@
 #include <pcl/surface/concave_hull.h>
 #include <pcl/pcl_config.h>
 
-#include <math.h>
-#include <fetch_delivery_system/BoxTarget.h>
 #include "sensor_msgs/JointState.h"
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/Vector3.h"
+#include "geometry_msgs/PointStamped.h"
 #include "visualization_msgs/Marker.h"
 #include "simple_grasping/shape_extraction.h"
 #include "shape_msgs/SolidPrimitive.h"
+
+#include <fetch_delivery_system/BoxTarget.h>
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
@@ -37,6 +45,7 @@ ros::Publisher pub_plane;
 ros::Publisher box_marker;
 ros::Publisher box_pose_pub;
 ros::Publisher box_target;
+ros::Publisher plane_centroid;
 double head_tilt = 0;
 
 void update_head_angle(const sensor_msgs::JointStateConstPtr &msg)
@@ -96,6 +105,17 @@ void callback(const PointCloud::ConstPtr &cloud)
   plane_output.header.frame_id = "head_camera_rgb_optical_frame";
   pub_plane.publish(plane_output);
 
+  // find the centroid of the plane
+  Eigen::Vector4d plane_centroid4;
+  Eigen::Vector3d plane_centroid3;
+  geometry_msgs::PointStamped plane_point_stamped;
+  pcl::compute3DCentroid(*plane_cloud, plane_centroid4);
+  plane_centroid3 = plane_centroid4.head<3>();
+  tf::pointEigenToMsg(plane_centroid3, plane_point_stamped.point);
+  plane_point_stamped.header.frame_id = "head_camera_rgb_optical_frame";
+  // publish centroid of plane
+  plane_centroid.publish(plane_point_stamped);
+
   // Segment object
   pcl::PointIndices::Ptr object_indices(new pcl::PointIndices);
   double z_min = 0.05, z_max = 0.5; // we want the points above the plane, between 5 cm and 50 cm from the surface
@@ -116,6 +136,7 @@ void callback(const PointCloud::ConstPtr &cloud)
   {
     PCL_ERROR("The input cloud does not represent a planar surface.\n");
   }
+
 
   // a point cloud of possible objects
   pcl::PointCloud<pcl::PointXYZ>::Ptr object_cloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -241,6 +262,7 @@ int main(int argc, char **argv)
   box_marker = nh.advertise<visualization_msgs::Marker>("box_marker", 1);
   box_pose_pub = nh.advertise<geometry_msgs::Pose>("box_target_pose", 1);
   box_target = nh.advertise<fetch_delivery_system::BoxTarget>("box_target", 1);
+  plane_centroid = nh.advertise<geometry_msgs::PointStamped>("plane_centroid", 1);
   ros::Subscriber sub = nh.subscribe<PointCloud>("/head_camera/depth_downsample/points", 1, callback);
   ros::Subscriber joint_sub = nh.subscribe<sensor_msgs::JointState>("joint_states", 1, update_head_angle);
   ros::spin();
