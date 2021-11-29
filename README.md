@@ -13,9 +13,11 @@ cd src # change to the src directory
 git clone https://github.com/jamesdarrenmuir/fetch_api.git # clone the Fetch API
 git clone https://github.com/GIX-C4RT/fetch-delivery-system.git # clone this repository
 cd .. # change to catkin workspace directory
-catkin_make # build the packages
+catkin_make_isolated # build the packages
 ```
 5. Perform the fetch_moveit_config bug workaround from the Known Issues section
+6. Setup your hosts file, ROS_HOSTNAME, and ROS_MASTER_URI environment variables based on your
+network setup.
 
 ## Running
 ### Pick-and-Place
@@ -23,7 +25,7 @@ catkin_make # build the packages
 1. Navigate to the catkin workspace directory.
 2. Run the following commands in a Bash terminal in the catkin workspace:
 ```
-source devel/setup.bash # overlay workspace on terminal environment
+source devel_isolated/setup.bash # overlay workspace on terminal environment
 roslaunch fetch_delivery_system pick.launch # launch the pick code
 ```
 

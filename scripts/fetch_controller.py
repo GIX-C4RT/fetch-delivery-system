@@ -28,6 +28,8 @@ from fetch_api import Base
 
 from robotics_labs.msg import BoxTarget
 
+LOWER_DEPTH = 0.27 # 27 cm
+
 class FetchController:
     '''
     A class representing the Fetch robot.
@@ -52,7 +54,7 @@ class FetchController:
         self.torso = Torso()
         self.head = Head()
         self.base = Base()
-        # Clearing any pre-existing octomap
+        # setup clear octomap service
         rospy.wait_for_service('/clear_octomap') #this will stop your code until the clear octomap service starts running
         self.clear_octomap = rospy.ServiceProxy('/clear_octomap', Empty)
 
@@ -65,19 +67,56 @@ class FetchController:
         rospy.sleep(2)
         self.scene.add_box(self.base_plane_name, base_plane_pose, size=(0.253, 0.57, 0.03))
 
-    def grasp_item(self):
-        # Execute moveit final script
-        box_pose = self.get_box_pose()
-        # if(box_pose.pose.positiQuaternion(x=0, )on.x > 0.5):
-        #     box_pose.pose.position.x
-        #     self.base.go_forward(box_pose.pose.position.x - 0.5)
-        #     box_pose = self.get_box_pose()
+    def place_tray(self):
+        # get position of plane
+        print "waiting for plane message"
+        surface_height = self.get_plane_height()
+        print "got surface height"
+        # build octomap to avoid collisions
+        print "building octomap"
         self.build_octomap()
+        # moving tray over plane
+        print "moving tray over surface"
+        # TODO
+        # lowering tray
+        print "lowering tray"
+        # TODO
+        # opening gripper
+        print "opening gripper"
+        self.gripper.open()
+        # tucking arm
+        print "tucking arm"
+        self.base.tuck()
+
+    def pick_tray(self):
+        # open gripper
+        self.gripper.open()
+        # get position of box
+        print "waiting for box message"
+        box_pose = self.get_box_pose()
+        print "got box message"
+        # build octomap to avoid collisions
+        print "building octomap"
+        self.build_octomap()
+        # move above box
+        print "moving gripper above box"
         self.execute_pose_goal(box_pose)
+        # move gripper around box
+        print "moving gripper down to handle"
         self.execute_approach()
+        # grab box
+        print "closing gripper"
+        self.gripper.close()
+        # pick up box
+        print "picking up box"
         self.execute_retract()
+        # tuck box
+        print "tucking box"
         self.execute_tuck()
+        # move torso
+        print "lowering torso"
         self.torso.set_height(0.09)
+        print "done grasping"
 
     def dock(self):
         # Docking to table
@@ -114,7 +153,7 @@ class FetchController:
             scale_metric = abs(box_target1.box_scale.scale.x * box_target1.box_scale.scale.y * box_target1.box_scale.scale.z -
                                 box_target2.box_scale.scale.x * box_target2.box_scale.scale.y * box_target2.box_scale.scale.z)
 
-            print "dist_metric = ", dist_metric, ";  scale_metric = ", scale_metric
+            # print "dist_metric = ", dist_metric, ";  scale_metric = ", scale_metric
             if dist_metric < 0.02 and scale_metric < 0.02:
                 box_target = box_target2
                 break
@@ -126,9 +165,9 @@ class FetchController:
         pose_transformed = tf2_geometry_msgs.do_transform_pose(pose_goal, transform)
 
         pose_transformed.pose.position.z += 0.5
-        print pose_transformed.pose.position.x
-        print pose_transformed.pose.position.y
-        print pose_transformed.pose.position.z
+        # print pose_transformed.pose.position.x
+        # print pose_transformed.pose.position.y
+        # print pose_transformed.pose.position.z
 
         angles = euler_from_quaternion([pose_transformed.pose.orientation.x, pose_transformed.pose.orientation.y, pose_transformed.pose.orientation.z, pose_transformed.pose.orientation.w])
         target_q = tf.transformations.quaternion_from_euler(0.0, 3.14 / 2.0, angles[2])
@@ -145,6 +184,11 @@ class FetchController:
         return pose_transformed
 
     def build_octomap(self):
+        # clear any pre-existing octomap
+        self.clear_octomap()
+        # wait for octomap to clear
+        time.sleep(1)
+        # scan area to build octomap
         self.head.pan_tilt(0.0, 0.0)
         self.head.pan_tilt(-1.5, 0.8)
         self.head.pan_tilt(1.5, 0.8)
@@ -184,10 +228,8 @@ class FetchController:
         pose.orientation.w = transform.transform.rotation.w
 
         waypoints = []
-        pose.position.z -= 0.1
-        waypoints.append(copy.deepcopy(pose))
 
-        pose.position.z -= 0.13
+        pose.position.z -= LOWER_DEPTH
         waypoints.append(copy.deepcopy(pose))
 
         (plan, fraction) = self.move_group.compute_cartesian_path(
@@ -204,7 +246,6 @@ class FetchController:
         self.move_group.clear_pose_targets()
 
     def execute_retract(self):
-        self.gripper.close()
         transform = self.tf_buffer.lookup_transform("base_link",
                                             "wrist_roll_link", #source frame
                                             rospy.Time(0),
@@ -220,10 +261,8 @@ class FetchController:
         pose.orientation.w = transform.transform.rotation.w
 
         waypoints = []
-        pose.position.z += 0.1
-        waypoints.append(copy.deepcopy(pose))
 
-        pose.position.z += 0.15
+        pose.position.z += LOWER_DEPTH
         waypoints.append(copy.deepcopy(pose))
 
         (plan, fraction) = self.move_group.compute_cartesian_path(
@@ -246,7 +285,7 @@ class FetchController:
         box_pose.pose.position.x += 0.325
         box_name = "box"
         rospy.sleep(2)
-        self.scene.add_box(box_name, box_pose, size=(0.35, 0.2, 0.35))
+        self.scene.add_box(box_name, box_pose, size=(0.1, 0.2, 0.35))
 
         ground_plane_pose = geometry_msgs.msg.PoseStamped()
         ground_plane_pose.header.frame_id = "base_link"
@@ -302,16 +341,21 @@ class FetchController:
             exit()
 
         self.move_group.execute(myplan)
+        print "finished tuck"
         # Calling `stop()` ensures that there is no residual movement
+        print "stopping tuck movement"
         self.move_group.stop()
 
+        print "removing collision objects"
         self.scene.remove_attached_object(self.move_group.get_end_effector_link(), name=box_name)
         self.scene.remove_world_object(box_name)
         self.scene.remove_world_object(ground_plane_name)
         self.scene.remove_world_object(self.base_plane_name)
+        print "removed collision objects"
 
 if __name__ == "__main__":
     myf = FetchController()
-    myf.grasp_item()
+    # myf.pick_tray()
     # myf.navigate_to(None)
+    myf.place_tray()
     rospy.spin()
