@@ -88,18 +88,15 @@ void callback(const PointCloud::ConstPtr& cloud)
   std::cerr << "Model inliers: " << inliers->indices.size () << std::endl;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr plane_cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  for (std::vector<int>::const_iterator pit = inliers->indices.begin (); pit != inliers->indices.end (); ++pit)
-    plane_cloud->push_back ((*cloud_filtered)[*pit]); //*
+
+  pcl::copyPointCloud(*cloud_filtered, *inliers, *plane_cloud);
   
-  plane_cloud->width = plane_cloud->size ();
-  plane_cloud->height = 1;
-  plane_cloud->is_dense = true;
 
   std::cout << "PointCloud representing the Cluster: " << plane_cloud->size () << " data points." << std::endl;
 
   // Segment object ////////////////////////////////////////////////////
   pcl::PointIndices::Ptr object_indices (new pcl::PointIndices);
-  double z_min = 0.05, z_max = 0.5; // we want the points above the plane, no farther than 5 cm from the surface
+  double z_min = 0.05, z_max = 0.5; // we want the points above the plane, between 5 cm and 50 cm from the surface
   pcl::PointCloud<pcl::PointXYZ>::Ptr hull_points (new pcl::PointCloud<pcl::PointXYZ> ());
   pcl::ConvexHull<pcl::PointXYZ> hull;
   // hull.setDimension (2); // not necessarily needed, but we need to check the dimensionality of the output
@@ -119,11 +116,13 @@ void callback(const PointCloud::ConstPtr& cloud)
   }
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr object_cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  for (std::vector<int>::const_iterator pit = object_indices->indices.begin (); pit != object_indices->indices.end (); ++pit)
-    object_cloud->push_back ((*cloud_filtered)[*pit]); //*
-  object_cloud->width = object_cloud->size ();
-  object_cloud->height = 1;
-  object_cloud->is_dense = true;
+  // for (std::vector<int>::const_iterator pit = object_indices->indices.begin (); pit != object_indices->indices.end (); ++pit)
+  //   object_cloud->push_back ((*cloud_filtered)[*pit]); //*
+  // object_cloud->width = object_cloud->size ();
+  // object_cloud->height = 1;
+  // object_cloud->is_dense = true;
+
+  pcl::copyPointCloud(*cloud_filtered, *object_indices, *object_cloud);
 
   std::cout << "Object cloud: " << object_cloud->size () << " data points." << std::endl;
 
@@ -151,6 +150,7 @@ void callback(const PointCloud::ConstPtr& cloud)
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
   {
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
+    // pcl::CentroidPoint<pcl::PointXYZ> centroid;
     for (const auto& idx : it->indices)
       cloud_cluster->push_back ((*object_cloud)[idx]); //*
     cloud_cluster->width = cloud_cluster->size ();
