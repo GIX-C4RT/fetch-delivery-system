@@ -26,7 +26,8 @@ network setup.
 2. Run the following commands in a Bash terminal in the catkin workspace:
 ```
 source devel_isolated/setup.bash # overlay workspace on terminal environment
-roslaunch fetch_delivery_system pick.launch # launch the pick code
+roslaunch fetch_delivery_system grasping.launch # launch the grasping dependencies
+rosrun fetch_delivery_system fetch_controller.py # run the pick and place code
 ```
 
 ## Known Issues

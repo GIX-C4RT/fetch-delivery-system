@@ -26,8 +26,11 @@ from fetch_api import Gripper, Torso, Head, Base, Arm
 from robotics_labs.msg import BoxTarget
 
 LOWER_DEPTH = 0.27 # 27 cm
-UNTUCK_SURFACE_CLEARANCE = 0.60 # 60 cm
+UNTUCK_SURFACE_CLEARANCE = 0.50 # 60 cm
 PLACE_CLEARANCE = 0.35 # 35 cm
+PLACE_POSITION_X = 0.70 # 70 cm
+PLACE_POSITION_Y = 0
+PLACE_ROTATION = -45 # 45 deg
 
 class FetchController:
     '''
@@ -57,8 +60,6 @@ class FetchController:
         # setup clear octomap service
         rospy.wait_for_service('/clear_octomap') #this will stop your code until the clear octomap service starts running
         self.clear_octomap = rospy.ServiceProxy('/clear_octomap', Empty)
-        # define box_name
-        self.box_name = "box"
     
     def pick_tray(self):
         # open gripper
@@ -78,23 +79,29 @@ class FetchController:
         self.execute_pose_goal(box_pose)
         # move gripper around box
         print "moving gripper down to handle"
-        self.execute_approach()
+        self.change_gripper_height(-LOWER_DEPTH)
         # grab box
         print "closing gripper"
         self.gripper.close()
-        # pick up box
-        print "picking up box"
-        self.execute_retract()
-        # tuck box
-        print "tucking box"
+        # add tray as collision object
+        print "adding tray collision object"
+        self.add_tray_collision_object()
+        # pick up tray
+        print "picking up tray"
+        self.change_gripper_height(LOWER_DEPTH)
+        # tuck tray
+        print "tucking tray"
         self.execute_tuck()
-        # move torso
+        # lower torso
         print "lowering torso"
         self.torso.set_height(0.09)
         print "done grasping"
         # remove common collision objects
         print "removing commmon collision objects"
         self.remove_common_collision_objects()
+        # remove tray collision object
+        print "removing tray collision object"
+        self.remove_tray_collision_object()
 
     def place_tray(self):
         # get position of plane
@@ -107,22 +114,37 @@ class FetchController:
         # add common collision objects
         print "adding commmon collision objects"
         self.add_common_collision_objects()
+        # add tray as collision object
+        print "adding tray collision object"
+        self.add_tray_collision_object()
         # moving tray over plane
         print "moving tray over surface"
         self.untuck(surface_height)
         # lowering tray
         print "lowering tray"
-        self.lower_tray()
+        self.change_gripper_height(-(UNTUCK_SURFACE_CLEARANCE - PLACE_CLEARANCE))
         # opening gripper
         print "opening gripper"
         self.gripper.open()
+        # remove tray collision object
+        print "removing tray collision object"
+        self.remove_tray_collision_object()
+        # raising gripper
+        print "raising gripper"
+        self.change_gripper_height((UNTUCK_SURFACE_CLEARANCE))
         # remove common collision objects
         print "removing commmon collision objects"
         self.remove_common_collision_objects()
         # tucking arm
         print "tucking arm"
         self.arm.tuck()
+        # wait for the arm to finish tucking
+        time.sleep(5)
+        # lower torso
+        print "lowering torso"
+        self.torso.set_height(0.09)
         
+
     def add_common_collision_objects(self):
         # Add base plane collision object
         # stops arm from colliding with robot base
@@ -166,7 +188,7 @@ class FetchController:
         print "height: " + str(transformed_point.point.z)
         return transformed_point.point.z
 
-    def lower_tray(self):
+    def change_gripper_height(self, gripper_height_delta):
         # get current gripper position
         transform = self.tf_buffer.lookup_transform("base_link",
                                             "wrist_roll_link", #source frame
@@ -186,7 +208,8 @@ class FetchController:
 
         waypoints = []
 
-        pose.position.z -= (UNTUCK_SURFACE_CLEARANCE - PLACE_CLEARANCE)
+        # pose.position.z -= (UNTUCK_SURFACE_CLEARANCE - PLACE_CLEARANCE)
+        pose.position.z += gripper_height_delta
         waypoints.append(copy.deepcopy(pose))
 
         (plan, fraction) = self.move_group.compute_cartesian_path(
@@ -197,15 +220,10 @@ class FetchController:
 
         self.move_group.execute(plan)
         # Calling `stop()` ensures that there is no residual movement
-        self.move_group.stop()
+        # self.move_group.stop()
         # It is always good to clear your targets after planning with poses.
         # Note: there is no equivalent function for clear_joint_value_targets()
         self.move_group.clear_pose_targets()
-
-        # detatch collision box from gripper
-        self.scene.remove_attached_object(self.move_group.get_end_effector_link(), name=self.box_name)
-        # remove collision box from scene
-        self.scene.remove_world_object(self.box_name)
 
     def untuck(self, height):
         # assume box is still attatched to gripper
@@ -213,13 +231,14 @@ class FetchController:
         # create pose goal for gripper (in base frame)
         pose_goal = Pose()
 
-        pose_goal.position.x = 0.5 # 50 cm
+        pose_goal.position.x = PLACE_POSITION_X
         # pose_goal.position.x = 0.7 # 70 cm
-        pose_goal.position.y = 0
+        pose_goal.position.y = PLACE_POSITION_Y
         pose_goal.position.z = height + UNTUCK_SURFACE_CLEARANCE
 
         # goal_orientation = tf.transformations.quaternion_from_euler(np.deg2rad(45), np.deg2rad(90), 0, axes='szyx')
-        goal_orientation = tf.transformations.quaternion_from_euler(0.0, 3.14 / 2.0, 0.0)
+        goal_orientation = tf.transformations.quaternion_from_euler(0.0, np.deg2rad(90), np.deg2rad(PLACE_ROTATION))
+        # goal_orientation = tf.transformations.quaternion_from_euler(0.0, 3.14 / 2.0, 0.0)
 
         pose_goal.orientation = geometry_msgs.msg.Quaternion(*goal_orientation)
         
@@ -259,7 +278,7 @@ class FetchController:
 
         # Calling `stop()` ensures that there is no residual movement
         print "stopping untuck movement"
-        self.move_group.stop()
+        # self.move_group.stop()
 
     def dock(self):
         # Docking to table
@@ -366,91 +385,32 @@ class FetchController:
 
         self.move_group.execute(myplan)
         # Calling `stop()` ensures that there is no residual movement
-        self.move_group.stop()
+        # self.move_group.stop()
         # It is always good to clear your targets after planning with poses.
         # Note: there is no equivalent function for clear_joint_value_targets()
         self.move_group.clear_pose_targets()
 
-    def execute_approach(self):
-        transform = self.tf_buffer.lookup_transform("base_link",
-                                       "wrist_roll_link", #source frame
-                                       rospy.Time(0),
-                                       rospy.Duration(5.0)) #get the tf at first available time
-
-        pose = Pose()
-        pose.position.x = transform.transform.translation.x
-        pose.position.y = transform.transform.translation.y
-        pose.position.z = transform.transform.translation.z
-        pose.orientation.x = transform.transform.rotation.x
-        pose.orientation.y = transform.transform.rotation.y
-        pose.orientation.z = transform.transform.rotation.z
-        pose.orientation.w = transform.transform.rotation.w
-
-        waypoints = []
-
-        pose.position.z -= LOWER_DEPTH
-        waypoints.append(copy.deepcopy(pose))
-
-        (plan, fraction) = self.move_group.compute_cartesian_path(
-                                        waypoints,   # waypoints to follow
-                                        0.01,        # eef_step
-                                        5.0,         # jump_threshold
-                                        False)         
-
-        self.move_group.execute(plan)
-        # Calling `stop()` ensures that there is no residual movement
-        self.move_group.stop()
-        # It is always good to clear your targets after planning with poses.
-        # Note: there is no equivalent function for clear_joint_value_targets()
-        self.move_group.clear_pose_targets()
-
-    def execute_retract(self):
-        transform = self.tf_buffer.lookup_transform("base_link",
-                                            "wrist_roll_link", #source frame
-                                            rospy.Time(0),
-                                            rospy.Duration(5.0)) #get the tf at first available time
-
-        pose = Pose()
-        pose.position.x = transform.transform.translation.x
-        pose.position.y = transform.transform.translation.y
-        pose.position.z = transform.transform.translation.z
-        pose.orientation.x = transform.transform.rotation.x
-        pose.orientation.y = transform.transform.rotation.y
-        pose.orientation.z = transform.transform.rotation.z
-        pose.orientation.w = transform.transform.rotation.w
-
-        waypoints = []
-
-        pose.position.z += LOWER_DEPTH
-        waypoints.append(copy.deepcopy(pose))
-
-        (plan, fraction) = self.move_group.compute_cartesian_path(
-                                        waypoints,   # waypoints to follow
-                                        0.01,        # eef_step
-                                        5.0,
-                                        False)         # jump_threshold
-
-        self.move_group.execute(plan)
-        # Calling `stop()` ensures that there is no residual movement
-        self.move_group.stop()
-        # It is always good to clear your targets after planning with poses.
-        # Note: there is no equivalent function for clear_joint_value_targets()
-        self.move_group.clear_pose_targets()
-
-    def execute_tuck(self):
+    def add_tray_collision_object(self):
+        self.tray_name = "tray"
         box_pose = geometry_msgs.msg.PoseStamped()
         box_pose.header.frame_id = "wrist_roll_link"
         box_pose.pose.orientation.w = 1.0
         box_pose.pose.position.x += 0.325
         rospy.sleep(2)
-        self.scene.add_box(self.box_name, box_pose, size=(0.1, 0.2, 0.35))
+        self.scene.add_box(self.tray_name, box_pose, size=(0.1, 0.2, 0.35))
 
         grasping_group = 'gripper'
         touch_links = self.robot.get_link_names(group=grasping_group)
         touch_links.append("wrist_roll_link")
-        self.scene.attach_box(self.move_group.get_end_effector_link(), self.box_name, touch_links=touch_links)
+        self.scene.attach_box(self.move_group.get_end_effector_link(), self.tray_name, touch_links=touch_links)
 
-        self.clear_octomap()
+    def remove_tray_collision_object(self):
+        # detatch collision box from gripper
+        self.scene.remove_attached_object(self.move_group.get_end_effector_link(), name=self.tray_name)
+        # remove collision box from scene
+        self.scene.remove_world_object(self.tray_name)
+
+    def execute_tuck(self):
 
         self.head.pan_tilt(-1.5, 0.0)
         self.head.pan_tilt(1.5, 0.0)
@@ -496,11 +456,14 @@ class FetchController:
         print "finished tuck"
         # Calling `stop()` ensures that there is no residual movement
         print "stopping tuck movement"
-        self.move_group.stop()
+        # self.move_group.stop()
 
 if __name__ == "__main__":
     myf = FetchController()
-    # myf.pick_tray()
+    myf.torso.set_height(0.09)
+    myf.head.pan_tilt(0.0, 0.8)
+    myf.pick_tray()
     # myf.navigate_to(None)
+    myf.head.pan_tilt(0.0, 0.8)
     myf.place_tray()
-    rospy.spin()
+    # rospy.spin()
