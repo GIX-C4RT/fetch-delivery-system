@@ -25,10 +25,12 @@ from fetch_api import Gripper, Torso, Head, Base, Arm
 
 from robotics_labs.msg import BoxTarget
 
-LOWER_DEPTH = 0.27 # 27 cm
+# LOWER_DEPTH = 0.27 # 27 cm, for table
+LOWER_DEPTH = 0.35 # 35 cm, for ground
 UNTUCK_SURFACE_CLEARANCE = 0.50 # 60 cm
 PLACE_CLEARANCE = 0.35 # 35 cm
-PLACE_POSITION_X = 0.70 # 70 cm
+# PLACE_POSITION_X = 0.70 # 70 cm, for table
+PLACE_POSITION_X = 0.50 # 50 cm, for ground
 PLACE_POSITION_Y = 0
 PLACE_ROTATION = -45 # 45 deg
 
@@ -461,9 +463,9 @@ class FetchController:
 if __name__ == "__main__":
     myf = FetchController()
     myf.torso.set_height(0.09)
-    myf.head.pan_tilt(0.0, 0.8)
+    myf.head.pan_tilt(0.0, 1.0)
     myf.pick_tray()
-    # myf.navigate_to(None)
-    myf.head.pan_tilt(0.0, 0.8)
+    # # myf.navigate_to(None)
+    myf.head.pan_tilt(0.0, 1.0)
     myf.place_tray()
     # rospy.spin()
