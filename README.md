@@ -27,6 +27,10 @@ network setup.
 ```
 source devel_isolated/setup.bash # overlay workspace on terminal environment
 roslaunch fetch_delivery_system grasping.launch # launch the grasping dependencies
+```
+2. Run the following commands in a second Bash terminal in the catkin workspace:
+```
+source devel_isolated/setup.bash # overlay workspace on terminal environment
 rosrun fetch_delivery_system fetch_controller.py # run the pick and place code
 ```
 

@@ -26,7 +26,7 @@ from fetch_api import Gripper, Torso, Head, Base, Arm
 from robotics_labs.msg import BoxTarget
 
 # LOWER_DEPTH = 0.27 # 27 cm, for table
-LOWER_DEPTH = 0.35 # 35 cm, for ground
+LOWER_DEPTH = 0.30 # 35 cm, for ground
 UNTUCK_SURFACE_CLEARANCE = 0.50 # 60 cm
 PLACE_CLEARANCE = 0.35 # 35 cm
 # PLACE_POSITION_X = 0.70 # 70 cm, for table
@@ -398,13 +398,14 @@ class FetchController:
         box_pose.header.frame_id = "wrist_roll_link"
         box_pose.pose.orientation.w = 1.0
         box_pose.pose.position.x += 0.325
-        rospy.sleep(2)
+        
         self.scene.add_box(self.tray_name, box_pose, size=(0.1, 0.2, 0.35))
-
+        rospy.sleep(1)
         grasping_group = 'gripper'
         touch_links = self.robot.get_link_names(group=grasping_group)
         touch_links.append("wrist_roll_link")
         self.scene.attach_box(self.move_group.get_end_effector_link(), self.tray_name, touch_links=touch_links)
+        rospy.sleep(1)
 
     def remove_tray_collision_object(self):
         # detatch collision box from gripper
